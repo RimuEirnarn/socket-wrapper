@@ -74,6 +74,9 @@ class Server(BaseConnection):
     def _receive_data(self, conn: Socket):
         try:
             data = _read(conn)
+            if not data:
+                self._close()
+                return
             decoded_data = validate_data(data[:-2])
             if decoded_data:
                 # Do something with the data
