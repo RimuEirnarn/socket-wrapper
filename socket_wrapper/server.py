@@ -45,7 +45,7 @@ class Server(BaseConnection):
         if len(self._clients) >= self._allows and self._allows != 0:
             self._on_reject(conn, addr)
             return
-        self._on_accept(sock, addr)
+        self._on_accept(conn, addr)
 
     def _on_accept(self, sock: Socket, addr: Addr):
         sock.setblocking(False)
