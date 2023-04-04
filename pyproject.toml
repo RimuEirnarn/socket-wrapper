@@ -15,4 +15,4 @@ dynamic = ["version"]
 
 [tool.setuptools]
 zip-safe = true
-packages = ["socket_server"]
+packages = ["socket_wrapper"]
