@@ -58,7 +58,11 @@ class Server(BaseConnection):
             self._close(sock)
         self._running = False
 
+    def _on_close(self, sock: Socket):
+        return
+
     def _close(self, sock: Socket):
+        self._on_close(sock)
         self._sel.unregister(sock)
         sock.close()
         self._clients.remove(sock)
