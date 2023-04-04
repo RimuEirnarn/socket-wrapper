@@ -40,7 +40,7 @@ class Server(BaseConnection):
         sock.send(b'\r\n')
         sock.close()
 
-    def _incomming(self, sock: Socket):
+    def _incoming(self, sock: Socket):
         conn, addr = sock.accept()
         if len(self._clients) >= self._allows and self._allows != 0:
             self._on_reject(conn, addr)
