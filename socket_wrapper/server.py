@@ -2,6 +2,7 @@
 from selectors import DefaultSelector, EVENT_READ
 from socket import socket as Socket, AF_INET, SOCK_STREAM
 
+from .typings import Addr
 from .utils import validate_data, _read
 from ._base import BaseConnection
 
@@ -17,7 +18,7 @@ class Server(BaseConnection):
         self._server_sock.bind((host, port))
         self._server_sock.listen()
         self._server_sock.setblocking(False)
-        self._sel.register(self._server_sock, EVENT_READ, self._on_accept)
+        self._sel.register(self._server_sock, EVENT_READ, self._incoming)
         self._clients: list[Socket] = []
         self._allows = connections
 
@@ -35,19 +36,21 @@ class Server(BaseConnection):
         except KeyboardInterrupt:
             return
 
-    def _on_reject(self, sock: Socket):
+    def _on_reject(self, sock: Socket, addr: Addr):
         sock.send(b'\r\n')
         sock.close()
 
-    def _on_accept(self, sock: Socket):
-        conn, _ = sock.accept()
+    def _incomming(self, sock: Socket):
+        conn, addr = sock.accept()
         if len(self._clients) >= self._allows and self._allows != 0:
-            self._on_reject(sock)
+            self._on_reject(conn, addr)
             return
+        self._on_accept(sock, addr)
 
-        conn.setblocking(False)
-        self._clients.append(conn)
-        self._sel.register(conn, EVENT_READ, self._receive_data)
+    def _on_accept(self, sock: Socket, addr: Addr):
+        sock.setblocking(False)
+        self._clients.append(sock)
+        self._sel.register(sock, EVENT_READ, self._receive_data)
 
     def stop(self):
         """Stop server thread"""
