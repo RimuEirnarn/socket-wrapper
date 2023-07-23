@@ -1,8 +1,8 @@
 """Test Client"""
 from time import sleep
-from socket_wrapper.client import TCPClient as Client
+from socket_wrapper.client import UNIXClient as Client
 
-client = Client("127.0.0.1", 2000)
+client = Client("server.sock")
 
 client.start()
 

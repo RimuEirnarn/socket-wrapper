@@ -1,21 +1,30 @@
-"""Client"""
+"""UNIX Client"""
 from selectors import DefaultSelector, EVENT_READ
-from socket import socket as Socket, AF_INET, SOCK_STREAM
+from socket import socket as Socket, SOCK_STREAM
+
+try:
+    from socket import AF_UNIX
+except ImportError:
+    AF_UNIX = -100
+
 from base64 import b64encode
 from time import sleep
 
+from .errors import FeatureError
 from .utils import validate_data, _read
 from ._base import BaseConnection
-from ._unixclient import UNIXClient
 
-class TCPClient(BaseConnection):
+
+class UNIXClient(BaseConnection):
     """Base Client class."""
 
-    def __init__(self, host: str, port: int):
-        super().__init__(host, port)
+    def __init__(self, host: str):
+        if AF_UNIX == -100:
+            raise FeatureError("UNIX Socket is not supported by the system.")
+        super().__init__(host, 0)
         self._sel = DefaultSelector()
-        self._sock = Socket(AF_INET, SOCK_STREAM)
-        self._sock.connect((host, port))
+        self._sock = Socket(AF_UNIX, SOCK_STREAM)
+        self._sock.connect(host)
         self._sock.setblocking(False)
         self._sel.register(self._sock, EVENT_READ, self._receive_data)
         self._received_data = b""
@@ -69,5 +78,3 @@ class TCPClient(BaseConnection):
         except OSError:
             self._sel.unregister(conn)
             conn.close()
-
-__all__ = ['TCPClient', 'UNIXClient']

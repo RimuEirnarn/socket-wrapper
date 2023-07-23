@@ -3,6 +3,8 @@
 from threading import Thread
 from socket import socket as Socket
 
+from .typings import Addr
+
 
 class BaseConnection:
     """Base Connection"""
@@ -34,10 +36,10 @@ class BaseConnection:
         """Run server logic. This is used by `.start` function"""
         return NotImplemented
 
-    def _on_reject(self, sock: Socket):
+    def _on_reject(self, sock: Socket, addr: Addr):
         return NotImplemented
 
-    def _on_accept(self, sock: Socket):
+    def _on_accept(self, sock: Socket, addr: Addr):
         return NotImplemented
 
     def stop(self):

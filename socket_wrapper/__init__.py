@@ -1,6 +1,6 @@
 """Socket Wrapper"""
-from .server import Server
-from .client import Client
+from .server import TCPServer, UNIXServer
+from .client import TCPClient, UNIXClient
 
-__all__ = ["Server", "Client"]
+__all__ = ["TCPServer", "TCPClient", "UNIXServer", "UNIXClient"]
 __version__ = "0.0.1"

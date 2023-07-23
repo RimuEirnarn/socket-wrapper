@@ -1,27 +1,36 @@
-"""Server"""
-from selectors import DefaultSelector, EVENT_READ
-from socket import SHUT_RDWR, socket as Socket, AF_INET, SOCK_STREAM
+"""Unix Server"""
 
+from selectors import DefaultSelector, EVENT_READ
+from socket import socket as Socket, SOCK_STREAM, SHUT_RDWR
+
+try:
+    from socket import AF_UNIX
+except ImportError: # Feature Error
+    AF_UNIX = -100
+
+from os import remove
+from .errors import FeatureError
 from .typings import Addr
 from .utils import validate_data, _read
 from ._base import BaseConnection
-from ._unixserver import UNIXServer
 
-
-class TCPServer(BaseConnection):
+class UNIXServer(BaseConnection):
     """Base Server class."""
 
-    def __init__(self, host: str, port: int, connections: int = 0):
-        super().__init__(host, port)
+    def __init__(self, path: str, connections: int = 0):
+        if AF_UNIX == -100:
+            raise FeatureError("Unix socket feature is missing.")
+        super().__init__(path, 0)
         self._running = False
         self._sel = DefaultSelector()
-        self._server_sock = Socket(AF_INET, SOCK_STREAM)
-        self._server_sock.bind((host, port))
+        self._server_sock = Socket(AF_UNIX, SOCK_STREAM)
+        self._server_sock.bind(path)
         self._server_sock.listen()
         self._server_sock.setblocking(False)
         self._sel.register(self._server_sock, EVENT_READ, self._incoming)
         self._clients: list[Socket] = []
         self._allows = connections
+        self._path = path
 
     def run(self):
         """Run server logic. This is used by `.start` function"""
@@ -60,8 +69,9 @@ class TCPServer(BaseConnection):
             self._close(sock)
         self._running = False
         self._server_sock.shutdown(SHUT_RDWR)
+        remove(self._path)
 
-    def _on_close(self, sock: Socket): # pylint: disable=unused-argument
+    def _on_close(self, sock: Socket):  # pylint: disable=unused-argument
         return
 
     def _close(self, sock: Socket):
@@ -89,5 +99,3 @@ class TCPServer(BaseConnection):
                 pass
         except Exception:
             self._close(conn)
-
-__all__ = ['TCPServer', 'UNIXServer']
